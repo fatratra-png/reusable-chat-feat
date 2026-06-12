@@ -1,0 +1,165 @@
+/* =============================================================
+   stdhub-chat — Reusable chat component styles
+   
+   Gray-only default palette — automatically inherits parent
+   project's color scheme when you override these CSS variables.
+   
+   To customise, override --chat-* variables in your app's CSS.
+   The chat will match your brand with zero config.
+   ============================================================= */
+
+:root {
+  /* ─── Primary palette ─── */
+  --chat-primary:         #1f1f1f;
+  --chat-primary-light:   #2d2d2d;
+  --chat-primary-dark:    #141414;
+
+  /* ─── Accent / brand ─── */
+  --chat-accent:          #6b7280;
+  --chat-accent-light:    #9ca3af;
+  --chat-accent-dark:     #4b5563;
+  --chat-accent-soft:     rgba(107, 114, 128, 0.15);
+  --chat-accent-border:   rgba(107, 114, 128, 0.4);
+
+  /* ─── Surfaces ─── */
+  --chat-surface:         #ffffff;
+  --chat-surface-dark:    #f3f4f6;
+  --chat-bg:              rgba(0, 0, 0, 0.03);
+  --chat-bg-hover:        rgba(0, 0, 0, 0.06);
+
+  /* ─── Text ─── */
+  --chat-text:            #1f1f1f;
+  --chat-text-secondary:  rgba(31, 31, 31, 0.6);
+  --chat-text-muted:      rgba(31, 31, 31, 0.4);
+  --chat-text-inverse:    #ffffff;
+
+  /* ─── Borders ─── */
+  --chat-border:          rgba(0, 0, 0, 0.1);
+  --chat-border-light:    rgba(0, 0, 0, 0.05);
+
+  /* ─── Message bubbles ─── */
+  --chat-bubble-own:           #e5e7eb;
+  --chat-bubble-own-text:      #1f1f1f;
+  --chat-bubble-other:         rgba(0, 0, 0, 0.06);
+  --chat-bubble-other-text:    var(--chat-text);
+  --chat-bubble-shadow:        rgba(0, 0, 0, 0.08);
+
+  /* ─── Status ─── */
+  --chat-online:          #22c55e;
+  --chat-offline:         #9ca3af;
+  --chat-typing:          var(--chat-accent);
+
+  /* ─── Danger ─── */
+  --chat-danger:          #ef4444;
+  --chat-danger-bg:       rgba(239, 68, 68, 0.1);
+  --chat-danger-text:     #f87171;
+
+  /* ─── Glass effects ─── */
+  --chat-glass-bg:        rgba(255, 255, 255, 0.05);
+  --chat-glass-border:    rgba(255, 255, 255, 0.1);
+  --chat-glass-blur:      12px;
+
+  /* ─── Shadows ─── */
+  --chat-shadow:          0 4px 24px rgba(0, 0, 0, 0.12);
+  --chat-shadow-lg:       0 8px 40px rgba(0, 0, 0, 0.2);
+
+  /* ─── Overlay ─── */
+  --chat-overlay:         rgba(0, 0, 0, 0.5);
+  --chat-overlay-heavy:   rgba(0, 0, 0, 0.95);
+}
+
+/* ─── Apply chat theme as CSS classes ─── */
+.chat-bg               { background-color: var(--chat-bg); }
+.chat-bg-surface       { background-color: var(--chat-surface); }
+.chat-text             { color: var(--chat-text); }
+.chat-text-secondary   { color: var(--chat-text-secondary); }
+.chat-text-muted       { color: var(--chat-text-muted); }
+.chat-text-inverse     { color: var(--chat-text-inverse); }
+.chat-border           { border-color: var(--chat-border); }
+.chat-accent           { color: var(--chat-accent); }
+.chat-accent-bg        { background-color: var(--chat-accent-soft); }
+.chat-accent-border    { border-color: var(--chat-accent-border); }
+
+/* ─── Animations ─── */
+@keyframes chat-message-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.chat-animate-message-in {
+  animation: chat-message-in 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes chat-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.chat-animate-fade-in {
+  animation: chat-fade-in 0.2s ease-out forwards;
+}
+
+@keyframes chat-slide-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.chat-animate-slide-up {
+  animation: chat-slide-up 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes chat-scale-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.chat-animate-scale-in {
+  animation: chat-scale-in 0.2s ease-out forwards;
+}
+
+/* ─── Status dots ─── */
+.chat-status-dot {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 9999px;
+  flex-shrink: 0;
+}
+
+.chat-status-online {
+  background-color: var(--chat-online);
+}
+
+.chat-status-offline {
+  background-color: var(--chat-offline);
+}
+
+/* ─── Scrollbar ─── */
+.chat-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chat-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.chat-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--chat-border);
+  border-radius: 3px;
+}
+
+/* ─── No scrollbar utility ─── */
+.chat-no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.chat-no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* ─── Glass effect utility ─── */
+.chat-glass {
+  background: var(--chat-glass-bg);
+  backdrop-filter: blur(var(--chat-glass-blur));
+  -webkit-backdrop-filter: blur(var(--chat-glass-blur));
+}
