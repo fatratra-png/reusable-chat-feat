@@ -362,7 +362,7 @@ function TextMessage({
               {isOwn ? "You" : msg.senderRef ? (
                 <a
                   href={onUserLink ? onUserLink(msg.senderRef) : "#"}
-                  onClick={(e) => { if (onNavigate) { e.preventDefault(); onNavigate(onUserLink!(msg.senderRef)); } }}
+                  onClick={(e) => { if (onNavigate && msg.senderRef) { e.preventDefault(); onNavigate(onUserLink!(msg.senderRef)); } }}
                   className="hover:underline"
                   style={{ color: "var(--chat-accent)" }}
                 >
@@ -825,13 +825,6 @@ function ContactAvatar({ contact, onlineUsers }: {
   contact: Contact;
   onlineUsers: Set<number | string>;
 }) {
-  if (contact.isGlobal) {
-    return (
-      <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: "var(--chat-accent-soft)" }}>
-        <FontAwesomeIcon icon={faReply} className="w-5 h-5" style={{ transform: "rotate(180deg)", color: "var(--chat-accent)" }} />
-      </div>
-    );
-  }
   const online = onlineUsers.has(contact.id);
   return (
     <div className="relative shrink-0">
@@ -1103,9 +1096,7 @@ export default function MessagePanel({
                 ? typingUsers.length === 1
                   ? `${typingUsers[0]} is typing…`
                   : `${typingUsers.length} people typing…`
-                : contact.isGlobal
-                  ? "Global chat – everyone"
-                  : "User"}
+                : ""}
             </p>
           </div>
         </div>
@@ -1114,7 +1105,7 @@ export default function MessagePanel({
           onClick={onOpenContacts}
           title="Contacts"
           className="absolute right-4 sm:right-6 w-9 h-9 rounded-xl flex items-center justify-center transition-all active:scale-95 shrink-0 shadow-lg"
-          style={{ backgroundColor: "var(--chat-accent)", color: "#fff" }}
+          style={{ backgroundColor: "var(--chat-accent)", color: "var(--chat-text-inverse)" }}
         >
           <FontAwesomeIcon icon={faChevronLeft} className="text-sm" />
         </button>
@@ -1278,13 +1269,13 @@ export default function MessagePanel({
                   </div>
                 }
               >
-                {/* @ts-expect-error emoji-picker-react types mismatch */}
+                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                 <EmojiPicker
-                  onEmojiClick={handleEmojiClick}
-                  theme="dark"
-                  emojiStyle="native"
-                  suggestedEmojisMode="recent"
-                  skinTonePickerLocation="SEARCH"
+                  onEmojiClick={handleEmojiClick as any}
+                  theme={"dark" as any}
+                  emojiStyle={"native" as any}
+                  suggestedEmojisMode={"recent" as any}
+                  skinTonePickerLocation={"SEARCH" as any}
                   searchPlaceholder="Search emoji"
                   lazyLoadEmojis
                   autoFocusSearch

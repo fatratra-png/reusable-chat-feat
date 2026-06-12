@@ -12,7 +12,6 @@ export interface Contact {
   name: string;
   ref?: string | null;
   avatar?: string | null;
-  isGlobal?: boolean;
 }
 
 export interface SearchResult {
@@ -50,7 +49,6 @@ export interface UnreadContact {
 }
 
 export interface Unread {
-  global: number;
   contacts: Record<string, UnreadContact>;
 }
 

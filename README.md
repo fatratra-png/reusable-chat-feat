@@ -18,7 +18,7 @@ function App() {
 ## Features
 
 - **Auto-theming** — reads your app's CSS and derives a full palette
-- Global chat room + private 1-to-1 messaging
+- Private 1-to-1 messaging
 - File/image sharing (local or Cloudinary)
 - Emoji reactions, reply, delete
 - Typing indicators, online presence, read receipts
@@ -26,7 +26,7 @@ function App() {
 - Mobile responsive with bottom-sheet actions
 - Image lightbox with download
 - Socket.IO real-time transport
-- MIT licensed
+- MIT licensed — fork, rewrite, do whatever makes you happy
 
 ---
 
@@ -169,7 +169,7 @@ Or via CSS:
 | `currentUser` | `User` | required | Logged-in user |
 | `onUserLink` | `(ref: string) => string` | `(ref) => "/user/"+ref` | Generate profile URL from ref |
 | `onNavigate` | `(path: string) => void` | — | Client-side navigation handler |
-| `customContacts` | `User[]` | `[]` | Extra contacts to always show |
+| `customContacts` | `User[]` | `[]` | Contacts to pin at the top |
 
 #### `<ChatLayout>`
 
@@ -201,7 +201,6 @@ interface User {
   name?: string;
   ref?: string | null;
   avatar?: string | null;
-  isGlobal?: boolean;
 }
 
 interface Contact {
@@ -209,7 +208,6 @@ interface Contact {
   name: string;
   ref?: string | null;
   avatar?: string | null;
-  isGlobal?: boolean;
 }
 
 interface Message {
@@ -251,7 +249,7 @@ This package requires a real-time backend. You can find the official server at t
 
 The backend provides:
 - REST API (`/api/messages/*`, `/api/messages/favorites/*`, `/api/messages/search`)
-- WebSocket events (message:global, message:private, typing, reactions, etc.)
+- WebSocket events (message:private, typing, reactions, etc.)
 - File upload (local or Cloudinary)
 - Push notifications (Web Push API)
 - PostgreSQL database with asyncpg
@@ -283,4 +281,8 @@ npm run typecheck
 
 ## License
 
-MIT
+MIT — have fun, tweak it, rewrite it, make it yours.
+
+> This is a **reusable chat feat**, not a rigid framework.  
+> Rip it apart, change the colors, swap the icons, add features, remove features.  
+> The whole point is that *you* drive it. Enjoy 🚀

@@ -37,12 +37,6 @@ interface UnreadUpdateData {
   pending?: number;
 }
 
-const GLOBAL_CONTACT: Contact = {
-  id: "global",
-  name: "Global Chat",
-  isGlobal: true,
-};
-
 function showNotification(title: string, body: string): void {
   if (!("Notification" in window)) return;
   if (Notification.permission !== "granted") return;
@@ -63,15 +57,15 @@ export default function ChatLayout({
   onNavigate,
   customContacts,
 }: ChatLayoutProps) {
-  const [contacts, setContacts] = useState<Contact[]>([GLOBAL_CONTACT]);
-  const [activeContact, setActiveContact] = useState<Contact>(GLOBAL_CONTACT);
+  const [contacts, setContacts] = useState<Contact[]>([]);
+  const [activeContact, setActiveContact] = useState<Contact | null>(null);
   const [messages, setMessages] = useState<Record<string, Message[]>>({});
   const [showContactList, setShowContactList] = useState(false);
   const [replyTo, setReplyTo] = useState<{ id: number; sender: string; content: string } | null>(null);
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [onlineUsers, setOnlineUsers] = useState<Set<number | string>>(new Set());
   const [isAtBottom, setIsAtBottom] = useState(true);
-  const [unread, setUnread] = useState<Unread>({ global: 0, contacts: {} });
+  const [unread, setUnread] = useState<Unread>({ contacts: {} });
   const [contactTotal, setContactTotal] = useState(0);
   const [favorites, setFavorites] = useState<(number | string)[]>([]);
   const [typingUsers, setTypingUsers] = useState<TypingUsers>({});
@@ -131,14 +125,6 @@ export default function ChatLayout({
     }
   }, []);
 
-  const markGlobalRead = useCallback(async (messageId: number) => {
-    try {
-      await api.post("/messages/global/read", { messageId });
-    } catch (err) {
-      console.error(err);
-    }
-  }, []);
-
   useEffect(() => {
     setLoadingContacts(true);
     api
@@ -154,9 +140,9 @@ export default function ChatLayout({
         }));
 
         const extra = Array.isArray(customContacts)
-          ? customContacts.filter((c) => !c.isGlobal).map((c) => ({ id: c.id, name: c.name || c.pseudo || "", ref: c.ref, avatar: c.avatar }))
+          ? customContacts.map((c) => ({ id: c.id, name: c.name || c.pseudo || "", ref: c.ref, avatar: c.avatar }))
           : [];
-        setContacts([GLOBAL_CONTACT, ...extra, ...formatted]);
+        setContacts([...extra, ...formatted]);
         if (data.total) setContactTotal(data.total);
       })
       .catch(console.error)
@@ -164,34 +150,24 @@ export default function ChatLayout({
     fetchUnread();
   }, [fetchUnread, customContacts]);
 
-  const markSeen = useCallback(
-    async (contact: Contact) => {
-      if (contact.isGlobal) {
-        const msgs = messagesRef.current["global"] || [];
-        const last = msgs[msgs.length - 1];
-        if (last) markGlobalRead(last.id);
-        setUnread((prev) => ({ ...prev, global: 0 }));
-        return;
+  const markSeen = useCallback(async (contact: Contact) => {
+    const msgs = messagesRef.current[contact.id] || [];
+    const unseenIds = msgs.filter((m) => !m.own && !m.seen).map((m) => m.id);
+    if (unseenIds.length > 0) {
+      try {
+        await api.patch("/messages/seen", { ids: unseenIds });
+      } catch (err) {
+        console.error(err);
       }
-      const msgs = messagesRef.current[contact.id] || [];
-      const unseenIds = msgs.filter((m) => !m.own && !m.seen).map((m) => m.id);
-      if (unseenIds.length > 0) {
-        try {
-          await api.patch("/messages/seen", { ids: unseenIds });
-        } catch (err) {
-          console.error(err);
-        }
-      }
-      setUnread((prev) => ({
-        ...prev,
-        contacts: {
-          ...prev.contacts,
-          [contact.id]: { ...prev.contacts[contact.id], unread: 0 },
-        },
-      }));
-    },
-    [markGlobalRead],
-  );
+    }
+    setUnread((prev) => ({
+      ...prev,
+      contacts: {
+        ...prev.contacts,
+        [contact.id]: { ...prev.contacts[contact.id], unread: 0 },
+      },
+    }));
+  }, []);
 
   const formatMsg = useCallback(
     (m: ApiMessage): Message => ({
@@ -217,15 +193,9 @@ export default function ChatLayout({
       if (!silent) setLoadingMessages(true);
       try {
         let data: { messages?: ApiMessage[] } | ApiMessage[];
-        if (contact.isGlobal) {
-          ({ data } = await api.get("/messages/global", {
-            params: { limit: 200 },
-          }));
-        } else {
-          ({ data } = await api.get(`/messages/private/${contact.id}`, {
-            params: { limit: 100 },
-          }));
-        }
+        ({ data } = await api.get(`/messages/private/${contact.id}`, {
+          params: { limit: 100 },
+        }));
         const msgList = Array.isArray(data) ? data : data?.messages;
         if (!Array.isArray(msgList)) return;
         const formatted = msgList.map(formatMsg);
@@ -253,15 +223,9 @@ export default function ChatLayout({
       const oldestId = currentMsgs[0].id;
       try {
         let data: { messages?: ApiMessage[] } | ApiMessage[];
-        if (contact.isGlobal) {
-          ({ data } = await api.get("/messages/global", {
-            params: { before: oldestId, limit: 100 },
-          }));
-        } else {
-          ({ data } = await api.get(`/messages/private/${contact.id}`, {
-            params: { before: oldestId, limit: 100 },
-          }));
-        }
+        ({ data } = await api.get(`/messages/private/${contact.id}`, {
+          params: { before: oldestId, limit: 100 },
+        }));
         const msgList = Array.isArray(data) ? data : data?.messages;
         if (!Array.isArray(msgList) || msgList.length === 0) return;
         const msgs = msgList.map(formatMsg);
@@ -298,8 +262,8 @@ export default function ChatLayout({
     try {
       const s = await getSocket();
       s.emit(isTyping ? "typing:started" : "typing:stopped", {
-        contactId: contact.isGlobal ? "global" : contact.id,
-        isGlobal: contact.isGlobal,
+        contactId: contact.id,
+        isGlobal: false,
       });
     } catch {}
   }, []);
@@ -342,27 +306,6 @@ export default function ChatLayout({
         if (cancelled) return;
         socket = s;
         socket.emit("user:join", currentUser.id);
-
-        socket.on("message:global", (data: ApiMessage) => {
-          const msg = formatMsg(data);
-          setMessages((prev) => {
-            const existing = prev["global"] || [];
-            if (existing.some((m) => m.id === msg.id)) return prev;
-            return { ...prev, global: [...existing, msg] };
-          });
-          if (!msg.own) {
-            const active = activeContactRef.current;
-            if (document.hidden || !active?.isGlobal) {
-              showNotification(
-                "Global Chat",
-                `${msg.sender}: ${msg.content.replace(/\[FILE:.+\]/, "[File]")}`,
-              );
-            }
-            if (!active?.isGlobal) {
-              setUnread((prev) => ({ ...prev, global: prev.global + 1 }));
-            }
-          }
-        });
 
         socket.on("message:private", (data: ApiMessage) => {
           const msg = formatMsg(data);
@@ -409,7 +352,7 @@ export default function ChatLayout({
         });
 
         socket.on("message:seen", ({ messageId }: { messageId: number }) => {
-          let seenContactId: string | number | null = null;
+          let seenContactId: string | number = "";
           setMessages((prev) => {
             const updated = { ...prev };
             for (const key of Object.keys(updated)) {
@@ -423,7 +366,7 @@ export default function ChatLayout({
             }
             return updated;
           });
-          if (seenContactId && seenContactId !== "global") {
+          if (seenContactId) {
             setUnread((prev) => {
               const contact = prev.contacts[seenContactId];
               if (!contact || !contact.pending) return prev;
@@ -467,9 +410,7 @@ export default function ChatLayout({
         socket.on("typing:started", ({ userId, pseudo }: { userId: number | string; pseudo: string }) => {
           const active = activeContactRef.current;
           if (!active) return;
-          if (active.isGlobal) {
-            setTypingUsers((prev) => ({ ...prev, [userId]: pseudo }));
-          } else if (String(userId) === String(active.id)) {
+          if (String(userId) === String(active.id)) {
             setTypingUsers((prev) => ({ ...prev, [userId]: pseudo }));
           }
         });
@@ -503,7 +444,6 @@ export default function ChatLayout({
       if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
       if (cleanupListener) cleanupListener();
       if (socket) {
-        socket.off("message:global");
         socket.off("message:private");
         socket.off("user:online");
         socket.off("user:offline");
@@ -533,16 +473,14 @@ export default function ChatLayout({
   };
 
   const sendMessage = async (content: string, replyToId: number | null = null) => {
+    if (!activeContact) return;
     try {
-      const payload = activeContact.isGlobal
-        ? { content, is_global: true, reply_to_id: replyToId }
-        : {
-            content,
-            receiver_id: activeContact.id,
-            is_global: false,
-            reply_to_id: replyToId,
-          };
-      await api.post("/messages", payload);
+      await api.post("/messages", {
+        content,
+        receiver_id: activeContact.id,
+        is_global: false,
+        reply_to_id: replyToId,
+      });
       setReplyTo(null);
       emitTyping(false);
     } catch (err) {
@@ -552,7 +490,8 @@ export default function ChatLayout({
 
   const handleReact = useCallback(
     async (messageId: number, emoji: string) => {
-      const { id: userId, pseudo: userName } = currentUser;
+      const userId = currentUser.id;
+      const userName = currentUser.pseudo || currentUser.name || "";
       setMessages((prev) => {
         const updated = { ...prev };
         for (const key of Object.keys(updated)) {
@@ -582,7 +521,9 @@ export default function ChatLayout({
         await api.post(`/messages/${messageId}/reactions`, { emoji });
       } catch (err) {
         console.error("Reaction error:", err);
-        loadMessages(activeContactRef.current, true);
+        if (activeContactRef.current) {
+          loadMessages(activeContactRef.current, true);
+        }
       }
     },
     [currentUser, loadMessages],
@@ -617,7 +558,7 @@ export default function ChatLayout({
       >
         <ContactList
           contacts={contacts}
-          activeId={activeContact.id}
+          activeId={activeContact?.id ?? ""}
           onSelect={handleSelectContact}
           onlineUsers={onlineUsers}
           unread={unread}
@@ -637,28 +578,34 @@ export default function ChatLayout({
 
       {/* Message panel */}
       <div className="flex-1 flex flex-col min-w-0">
-        <MessagePanel
-          contact={activeContact}
-          messages={messages[activeContact.id] || []}
-          loading={loadingMessages}
-          onSend={sendMessage}
-          onDelete={deleteMessage}
-          onOpenContacts={() => setShowContactList(true)}
-          isAtBottom={isAtBottom}
-          onAtBottomChange={setIsAtBottom}
-          onScrollToBottom={handleScrollToBottom}
-          onlineUsers={onlineUsers}
-          onLoadOlder={() => loadOlderMessages(activeContact)}
-          replyTo={replyTo}
-          onReply={setReplyTo}
-          typingUsers={typingList}
-          socketState={socketState}
-          onTypingChange={emitTypingThrottled}
-          onReact={handleReact}
-          currentUserId={currentUser.id}
-          onUserLink={onUserLink}
-          onNavigate={onNavigate}
-        />
+        {activeContact ? (
+          <MessagePanel
+            contact={activeContact}
+            messages={messages[activeContact.id] || []}
+            loading={loadingMessages}
+            onSend={sendMessage}
+            onDelete={deleteMessage}
+            onOpenContacts={() => setShowContactList(true)}
+            isAtBottom={isAtBottom}
+            onAtBottomChange={setIsAtBottom}
+            onScrollToBottom={handleScrollToBottom}
+            onlineUsers={onlineUsers}
+            onLoadOlder={() => loadOlderMessages(activeContact)}
+            replyTo={replyTo}
+            onReply={setReplyTo}
+            typingUsers={typingList}
+            socketState={socketState}
+            onTypingChange={emitTypingThrottled}
+            onReact={handleReact}
+            currentUserId={currentUser.id}
+            onUserLink={onUserLink}
+            onNavigate={onNavigate}
+          />
+        ) : (
+          <div className="flex-1 flex items-center justify-center" style={{ backgroundColor: "var(--chat-bg)", color: "var(--chat-text-muted)" }}>
+            <p className="text-sm">Select a contact to start chatting</p>
+          </div>
+        )}
       </div>
     </div>
   );

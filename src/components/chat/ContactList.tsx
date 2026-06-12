@@ -5,7 +5,6 @@ import {
   faPlus,
   faTimes,
   faSpinner,
-  faComments,
   faStar,
 } from "@fortawesome/free-solid-svg-icons";
 import api from "../../api";
@@ -47,8 +46,6 @@ const ContactList = memo(function ContactList({
 
   const sorted = useMemo(() => {
     return [...contacts].filter(Boolean).sort((a, b) => {
-      if (a.isGlobal) return -1;
-      if (b.isGlobal) return 1;
       const aFav = favorites.includes(a.id);
       const bFav = favorites.includes(b.id);
       if (aFav && !bFav) return -1;
@@ -66,7 +63,6 @@ const ContactList = memo(function ContactList({
   );
 
   const getUnreadCount = (contact: Contact): number => {
-    if (contact.isGlobal) return unread?.global || 0;
     const c = unread?.contacts?.[contact.id];
     return c?.unread || 0;
   };
@@ -103,22 +99,6 @@ const ContactList = memo(function ContactList({
   };
 
   const ContactAvatar = ({ contact, isActive }: { contact: Contact; isActive: boolean }) => {
-    if (!contact || contact.isGlobal) {
-      if (!contact) return null;
-      return (
-        <div
-          className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
-            isActive ? "chat-accent-bg" : "chat-bg"
-          }`}
-          style={{ backgroundColor: isActive ? "var(--chat-accent)" : "var(--chat-border)" }}
-        >
-          <FontAwesomeIcon
-            icon={faComments}
-            className={`text-sm ${isActive ? "chat-text-inverse" : "chat-text-secondary"}`}
-          />
-        </div>
-      );
-    }
     const online = onlineUsers.has(contact.id);
     return (
       <div className="relative shrink-0 block">
@@ -210,30 +190,28 @@ const ContactList = memo(function ContactList({
                   >
                     {contact.name}
                   </span>
-                  {!contact.isGlobal && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onToggleFavorite(contact.id);
-                      }}
-                      className="shrink-0 transition-colors"
-                      style={{
-                        color: favorites.includes(contact.id)
-                          ? "var(--chat-accent)"
-                          : "var(--chat-border)",
-                      }}
-                      onMouseEnter={(e) => {
-                        if (!favorites.includes(contact.id))
-                          e.currentTarget.style.color = "var(--chat-accent)";
-                      }}
-                      onMouseLeave={(e) => {
-                        if (!favorites.includes(contact.id))
-                          e.currentTarget.style.color = "var(--chat-border)";
-                      }}
-                    >
-                      <FontAwesomeIcon icon={faStar} className="text-[10px]" />
-                    </button>
-                  )}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onToggleFavorite(contact.id);
+                    }}
+                    className="shrink-0 transition-colors"
+                    style={{
+                      color: favorites.includes(contact.id)
+                        ? "var(--chat-accent)"
+                        : "var(--chat-border)",
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!favorites.includes(contact.id))
+                        e.currentTarget.style.color = "var(--chat-accent)";
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!favorites.includes(contact.id))
+                        e.currentTarget.style.color = "var(--chat-border)";
+                    }}
+                  >
+                    <FontAwesomeIcon icon={faStar} className="text-[10px]" />
+                  </button>
                 </div>
               </div>
               {getUnreadCount(contact) > 0 && (
