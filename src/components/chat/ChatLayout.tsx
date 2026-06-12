@@ -605,7 +605,7 @@ export default function ChatLayout({
   }, [typingUsers]);
 
   return (
-    <div className="flex w-full h-full overflow-hidden">
+    <div className="chat-root flex w-full h-full overflow-hidden">
       {/* Contact list sidebar */}
       <div
         className={`

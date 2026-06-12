@@ -1,14 +1,12 @@
 /* =============================================================
-   stdhub-chat — Reusable chat component styles
+   reusable-chat-feat — Self-contained chat component styles
    
-   Gray-only default palette — automatically inherits parent
-   project's color scheme when you override these CSS variables.
-   
-   To customise, override --chat-* variables in your app's CSS.
-   The chat will match your brand with zero config.
+   All CSS variables are scoped to .chat-root — the host app's
+   styles are never touched.  Variables cascade down inside the
+   chat tree, leaving zero global footprint.
    ============================================================= */
 
-:root {
+.chat-root {
   /* ─── Primary palette ─── */
   --chat-primary:         #1f1f1f;
   --chat-primary-light:   #2d2d2d;
@@ -66,6 +64,24 @@
   /* ─── Overlay ─── */
   --chat-overlay:         rgba(0, 0, 0, 0.5);
   --chat-overlay-heavy:   rgba(0, 0, 0, 0.95);
+}
+
+@media (prefers-color-scheme: dark) {
+  .chat-root {
+    --chat-surface:         #1a1a1a;
+    --chat-surface-dark:    #141414;
+    --chat-bg:              rgba(0, 0, 0, 0.3);
+    --chat-bg-hover:        rgba(255, 255, 255, 0.08);
+    --chat-text:            #e5e5e5;
+    --chat-text-secondary:  rgba(229, 229, 229, 0.6);
+    --chat-text-muted:      rgba(229, 229, 229, 0.4);
+    --chat-text-inverse:    #1f1f1f;
+    --chat-border:          rgba(255, 255, 255, 0.1);
+    --chat-border-light:    rgba(255, 255, 255, 0.05);
+    --chat-bubble-other:    rgba(255, 255, 255, 0.08);
+    --chat-glass-bg:        rgba(255, 255, 255, 0.06);
+    --chat-overlay:         rgba(0, 0, 0, 0.7);
+  }
 }
 
 /* ─── Apply chat theme as CSS classes ─── */

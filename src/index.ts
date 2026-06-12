@@ -12,6 +12,7 @@ export {
   GROUP_GAP,
 } from "./components/chat/chat-utils";
 export { getSocket, disconnectSocket, refreshSocket, onConnectionChange } from "./socket";
+export { autoThemeChat } from "./autoTheme";
 export type { User, Contact, Message, Reaction, Unread, ParsedFile, SocketState } from "./types";
 
 import "./styles/chat.css";

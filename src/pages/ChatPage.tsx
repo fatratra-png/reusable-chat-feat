@@ -17,7 +17,7 @@ export default function ChatPage({
 }: ChatPageProps) {
   return (
     <div
-      className="flex h-screen overflow-hidden"
+      className="chat-root flex h-screen overflow-hidden"
       style={{ backgroundColor: "var(--chat-bg)" }}
     >
       <div className="flex-1 overflow-hidden min-w-0 relative z-10">
